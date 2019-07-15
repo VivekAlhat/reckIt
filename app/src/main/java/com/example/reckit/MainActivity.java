@@ -19,6 +19,9 @@ import com.google.firebase.ml.vision.cloud.FirebaseVisionCloudDetectorOptions;
 import com.google.firebase.ml.vision.cloud.label.FirebaseVisionCloudLabel;
 import com.google.firebase.ml.vision.cloud.label.FirebaseVisionCloudLabelDetector;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.label.FirebaseVisionLabel;
+import com.google.firebase.ml.vision.label.FirebaseVisionLabelDetector;
+import com.google.firebase.ml.vision.label.FirebaseVisionLabelDetectorOptions;
 import com.wonderkiln.camerakit.CameraKitError;
 import com.wonderkiln.camerakit.CameraKitEvent;
 import com.wonderkiln.camerakit.CameraKitEventListener;
@@ -53,10 +56,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        cameraView =(cameraView).findViewById(R.id.camera_view);
+        cameraView = (CameraView)findViewById(R.id.camera_view);
 
         btnDetect = (Button) findViewById(R.id.btn_detect);
-        waitingDialog = new SpotsDialog.Builder().setMessage("Processing..")
+        waitingDialog = new SpotsDialog.Builder().setContext(this).setMessage("Processing..")
                 .setCancelable(false).build();
 
         cameraView.addCameraKitListener(new CameraKitEventListener() {
@@ -106,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
                     detector.detectInImage(image).addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionCloudLabel>>() {
                         @Override
                         public void onSuccess(List<FirebaseVisionCloudLabel> firebaseVisionCloudLabels) {
-                            processDataResult(firebaseVisionCloudLabels);
+                            processDataResultCloud(firebaseVisionCloudLabels);
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
@@ -116,13 +119,38 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                 }
+                else{
+                    //Get highest possibility
+                    FirebaseVisionLabelDetectorOptions options = new FirebaseVisionLabelDetectorOptions.Builder().setConfidenceThreshold(0.6f).build();
+                    FirebaseVisionLabelDetector detector = FirebaseVision.getInstance().getVisionLabelDetector(options);
+                    detector.detectInImage(image).addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionLabel>>() {
+                        @Override
+                        public void onSuccess(List<FirebaseVisionLabel> firebaseVisionLabels) {
+                            processDataResult(firebaseVisionLabels);
+                        }
+                    });
+                }
             }
         });
+
+
     }
 
-    private void processDataResult(List<FirebaseVisionCloudLabel> firebaseVisionCloudLabels) {
+    private void processDataResultCloud(List<FirebaseVisionCloudLabel> firebaseVisionCloudLabels) {
         for (FirebaseVisionCloudLabel label : firebaseVisionCloudLabels){
             Toast.makeText(this,"Result: "+label.getLabel(),Toast.LENGTH_SHORT).show();
+            if (waitingDialog.isShowing()){
+                waitingDialog.dismiss();
+            }
+        }
+    }
+
+    private void processDataResult(List<FirebaseVisionLabel> FirebaseVisionLabel) {
+        for (FirebaseVisionLabel label : FirebaseVisionLabel){
+            Toast.makeText(this,"Result: "+label.getLabel(),Toast.LENGTH_SHORT).show();
+            if (waitingDialog.isShowing()){
+                waitingDialog.dismiss();
+            }
         }
     }
 
