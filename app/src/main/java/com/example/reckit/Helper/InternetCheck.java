@@ -9,7 +9,7 @@ public class InternetCheck extends AsyncTask<Void,Void,Boolean> {
     //protected static String server_Host = "google.com";
     //private static final int server_Port = 80 ;
     //private  static final int timeout = 1500;
-    interface Consumer{
+    public interface Consumer{
         void accept(boolean internet);  //accept the internet conn
     }
 
